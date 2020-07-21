@@ -15,12 +15,14 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '!p)rf_au)rhbv=j!e725@*34kyiih04dtl!q7rrk5x8hi($&19'
+SECRET_KEY = 'defaultsecret'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -29,8 +31,8 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
-
 INSTALLED_APPS = [
+    'acris.apps.CoreConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,6 +50,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 ROOT_URLCONF = 'acris.urls'
 

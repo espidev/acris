@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User, Group
+from acris.core.models import Collection, Playlist, Track
 from rest_framework import serializers
 
 
@@ -8,7 +9,19 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['username', 'email']
 
 
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
+class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Group
-        fields = ['name']
+        model = Collection
+        fields = ['id', 'name', 'is_public', 'owners', 'viewers']
+
+
+class PlaylistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Playlist
+        fields = ['name', 'collection']
+
+
+class TrackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Track
+        fields = ['id', 'name', 'file_name', 'length', 'artist', 'album_artist', 'album', 'genre', 'year', 'collection']

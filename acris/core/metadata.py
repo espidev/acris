@@ -2,19 +2,17 @@ import base64
 
 import mutagen
 
-from mutagen.aac import AAC
 from mutagen.flac import FLAC, Picture, error as FLACError
 from mutagen.mp3 import EasyMP3, MP3
-from mutagen.easyid3 import EasyID3
 from mutagen.oggvorbis import OggVorbis
 from mutagen.oggopus import OggOpus
-from mutagen.mp4 import MP4, MP4Cover
+from mutagen.mp4 import MP4
 
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import datetime
-from acris.core.models import Track, Album, Genre, Artist, Collection
+from acris.core.models import Track, Album, Genre, Artist
 
 def shared_vorbis_extract(track: Track, metadata: mutagen.FileType):
     track.length = datetime.timedelta(seconds=metadata.info.length)
@@ -80,15 +78,26 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
                     continue
                 try:
                     picture = Picture(data)
-                    
+                    apply_thumbnail(track, Image.open(BytesIO(picture.data)))
                 except FLACError:
                     continue
                 break
 
-
-
         elif isinstance(metadata, OggOpus):
+            track.audio_format = 'ogg opus'
+            shared_vorbis_extract(track, metadata)
 
+            for b64_data in metadata.get("metadata_block_picture", []):
+                try:
+                    data = base64.b64decode(b64_data)
+                except (TypeError, ValueError):
+                    continue
+                try:
+                    picture = Picture(data)
+                    apply_thumbnail(track, Image.open(BytesIO(picture.data)))
+                except FLACError:
+                    continue
+                break
 
     except mutagen.MutagenError:
         print("Fail :(")

@@ -1,13 +1,17 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+
+
+class AcrisUser(AbstractUser):
+    description = models.TextField()
 
 
 # a full group of tracks, can be owned by several users
 class Collection(models.Model):
     date_created = models.DateTimeField()
     name = models.CharField(max_length=128)
-    owners = models.ManyToManyField(User)
-    viewers = models.ManyToManyField(User)
+    owners = models.ManyToManyField(AcrisUser, related_name='%(class)s_owners', default=[])
+    viewers = models.ManyToManyField(AcrisUser, related_name='%(class)s_viewers', default=[])
     is_public = models.BooleanField()
 
 
@@ -78,7 +82,7 @@ class Track(models.Model):
     album = models.ForeignKey(Album, on_delete=models.CASCADE)
     album_track_number = models.IntegerField()
     genres = models.ManyToManyField(Genre)
-    lyrics = models.CharField()
+    lyrics = models.TextField()
     year = models.CharField(max_length=128)
     playlists = models.ManyToManyField(Playlist)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)

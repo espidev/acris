@@ -8,6 +8,7 @@ from rest_framework.exceptions import ParseError
 
 from django.db.models import Q
 from django.http import Http404
+from django.contrib.auth.models import User
 
 import acris.core.serializers as serializers
 import acris.core.audio as audio
@@ -22,14 +23,38 @@ def get_collection(collection_id):
         raise Http404
 
 
-# route: api/collections
-class CollectionsListRoute(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    serializer_class = serializers.CollectionSerializer
+# route: api/user/<user_id>
+class UserRoute(APIView):
+    def get(self, request, user_id, format=None):
+        try:
+            return Response(serializers.AcrisUserSerializer(User.objects.get(id=user_id)).data)
+        except User.DoesNotExist:
+            raise Http404
 
-    def get_queryset(self):
+
+# route: api/user
+class CurrentUserRoute(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        return Response(serializers.AcrisUserSerializer(self.request.user).data)
+
+
+# route: api/collections
+class CollectionsListRoute(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
         user = self.request.user
-        return Collection.objects.filter(Q(viewers__in=user) | Q(owners__in=user))
+        collections = Collection.objects.filter(Q(viewers=user) | Q(owners=user))
+        return Response(serializers.CollectionSerializer(collections, many=True).data)
+
+    def post(self, request, format=None):
+        serializer = serializers.CollectionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(date_created=datetime.now())
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # route: api/collection/<collection_id>
@@ -70,7 +95,7 @@ class CollectionUploadRoute(APIView):
         track = Track(date_uploaded=datetime.now(), collection=collection, file_name=file.name, audio_src=file)
         track.save()
 
-        # add metadata
+        # add metadata to db
         audio.setup_track_from_file(track)
 
         return Response(file.name, status.HTTP_201_CREATED)
@@ -82,7 +107,7 @@ class CollectionTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return get_collection(kwargs['collection_id']).track_set.all()
+        return Response(get_collection(kwargs['collection_id']).track_set.all())
 
 
 # route: api/track/<track_id>
@@ -92,7 +117,7 @@ class TrackRoute(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            return Track.objects.get(id=kwargs['track_id'])
+            return Response(Track.objects.get(id=kwargs['track_id']))
         except Track.DoesNotExist:
             raise Http404
 
@@ -107,7 +132,7 @@ class CollectionPlaylistsRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return get_collection(kwargs['collection_id']).playlist_set.all()
+        return Response(get_collection(kwargs['collection_id']).playlist_set.all())
 
 
 # route: api/playlist/<playlist_id>
@@ -117,7 +142,7 @@ class PlaylistRoute(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            return Playlist.objects.get(id=kwargs['playlist_id'])
+            return Response(Playlist.objects.get(id=kwargs['playlist_id']))
         except Playlist.DoesNotExist:
             raise Http404
 
@@ -128,7 +153,7 @@ class PlaylistTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return Track.objects.filter(playlists__id=kwargs['playlist_id'])
+        return Response(Track.objects.filter(playlists__id=kwargs['playlist_id']))
 
 
 # route: api/collection/<collection_id>/albums
@@ -137,7 +162,7 @@ class CollectionAlbumsRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return get_collection(kwargs['collection_id']).album_set.all()
+        return Response(get_collection(kwargs['collection_id']).album_set.all())
 
 
 # route: api/album/<album_id>
@@ -147,7 +172,7 @@ class AlbumRoute(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            return Album.objects.get(id=kwargs['album_id'])
+            return Response(Album.objects.get(id=kwargs['album_id']))
         except Album.DoesNotExist:
             raise Http404
 
@@ -158,7 +183,7 @@ class AlbumTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return Track.objects.filter(playlists__id=kwargs['album_id'])
+        return Response(Track.objects.filter(playlists__id=kwargs['album_id']))
 
 
 # route: api/collection/<collection_id>/artists
@@ -167,7 +192,7 @@ class CollectionArtistsRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return get_collection(kwargs['collection_id']).artist_set.all()
+        return Response(get_collection(kwargs['collection_id']).artist_set.all())
 
 
 # route: api/artist/<artist_id>
@@ -177,7 +202,7 @@ class ArtistRoute(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            return Artist.objects.get(id=kwargs['artist_id'])
+            return Response(Artist.objects.get(id=kwargs['artist_id']))
         except Artist.DoesNotExist:
             raise Http404
 
@@ -188,7 +213,7 @@ class ArtistTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return Track.objects.filter(playlists__id=kwargs['artist_id'])
+        return Response(Track.objects.filter(playlists__id=kwargs['artist_id']))
 
 
 # route: api/collection/<collection_id>/genres
@@ -197,7 +222,7 @@ class CollectionGenresRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return get_collection(kwargs['collection_id']).genre_set.all()
+        return Response(get_collection(kwargs['collection_id']).genre_set.all())
 
 
 # route: api/genre/<genre_id>
@@ -207,7 +232,7 @@ class GenreRoute(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            return Genre.objects.get(id=kwargs['genre_set'])
+            return Response(Genre.objects.get(id=kwargs['genre_set']))
         except Genre.DoesNotExist:
             raise Http404
 
@@ -218,7 +243,7 @@ class GenreTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return Track.objects.filter(playlists__id=kwargs['genre_id'])
+        return Response(Track.objects.filter(playlists__id=kwargs['genre_id']))
 
 
 # route: api/track/<track_id>/stream

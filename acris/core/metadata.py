@@ -14,6 +14,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import datetime
 from acris.core.models import Track, Album, Genre, Artist
 
+
 def shared_vorbis_extract(track: Track, metadata: mutagen.FileType):
     track.length = datetime.timedelta(seconds=metadata.info.length)
     track.name = metadata.get('title')
@@ -28,9 +29,11 @@ def shared_vorbis_extract(track: Track, metadata: mutagen.FileType):
     track.lyrics = metadata.get('lyrics')
     track.year = metadata.get('date')
 
+
 def apply_thumbnail(track: Track, image: Image):
     image_name = str(track.id) + '.' + image.format.lower()
     track.save(image_name, InMemoryUploadedFile(image, None, image_name, Image.MIME[image.format], image.tell, None))
+
 
 # extract audio file metadata and apply it onto track model
 def extract_metadata(track: Track, metadata: mutagen.FileType):
@@ -38,6 +41,8 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
         if isinstance(metadata, FLAC):
             track.audio_format = 'flac'
             shared_vorbis_extract(track, metadata)
+            if len(metadata.pictures) > 0:
+                apply_thumbnail(track, Image.open(BytesIO(metadata.pictures[0].data)))
 
         elif isinstance(metadata, MP3):
             # image only accessible with full ID3

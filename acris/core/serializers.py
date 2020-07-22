@@ -1,26 +1,26 @@
 from django.contrib.auth.models import User, Group
-from acris.core.models import Collection, Playlist, Track, Artist, Album, Genre
+from acris.core.models import Collection, Playlist, Track, Artist, Album, Genre, AcrisUser
 from rest_framework import serializers
 
 
-class UserSerializer(serializers.ModelSerializer):
-    collections = serializers.PrimaryKeyRelatedField(many=True, queryset=Collection.objects.all())
-
+class AcrisUserSerializer(serializers.ModelSerializer):
+    # collection_set = serializers.PrimaryKeyRelatedField(many=True, queryset=Collection.objects.all())
     class Meta:
-        model = User
-        fields = ['username', 'email', 'collections']
+        model = AcrisUser
+        fields = ['id', 'username', 'email']
 
 
 class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
-        fields = ['id', 'name', 'is_public', 'owners', 'viewers', 'is_public']
+        fields = ['id', 'name', 'is_public', 'owners', 'viewers']
 
 
 class PlaylistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Playlist
         fields = ['name', 'collection']
+
 
 class ArtistSerializer(serializers.ModelSerializer):
     class Meta:

@@ -4,11 +4,11 @@ from rest_framework import permissions, generics, mixins, status
 from rest_framework.parsers import FileUploadParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import ParseError
 
 from django.db.models import Q
 from django.http import Http404
 from django.contrib.auth.models import User
+from django.utils.timezone import make_aware
 
 import acris.core.serializers as serializers
 import acris.core.audio as audio
@@ -82,23 +82,22 @@ class CollectionRoute(APIView):
 
 # route: api/collection/<collection_id>/upload
 class CollectionUploadRoute(APIView):
-    parser_classes = [FileUploadParser]
+    parser_classes = (FileUploadParser,)
 
-    def put(self, request, filename, collection_id, format=None):
-        if 'file' not in request.data:
-            raise ParseError('Empty content')
+    def put(self, request, collection_id, format=None):
+        try:
+            collection = get_collection(collection_id)
+            file = request.FILES['file']
 
-        collection = get_collection(collection_id)
-        file = request.data['file']
+            track = Track(date_uploaded=make_aware(datetime.now()), collection=collection, file_name=file.name, audio_src=file)
+            track.save()
 
-        # create initial track
-        track = Track(date_uploaded=datetime.now(), collection=collection, file_name=file.name, audio_src=file)
-        track.save()
-
-        # add metadata to db
-        audio.setup_track_from_file(track)
-
-        return Response(file.name, status.HTTP_201_CREATED)
+            # add metadata to db
+            audio.setup_track_from_file(track)
+            return Response(status.HTTP_201_CREATED)
+        except Exception as e:
+            print(e)
+        return Response(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # route: api/collection/<collection_id>/tracks

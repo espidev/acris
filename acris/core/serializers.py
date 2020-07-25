@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User, Group
 from acris.core.models import Collection, Playlist, Track, Artist, Album, Genre, AcrisUser
 from rest_framework import serializers
 
@@ -59,3 +58,7 @@ class TrackSerializer(serializers.ModelSerializer):
                   'collection',
                   'playlists',
                   'thumbnail_src']
+
+
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()

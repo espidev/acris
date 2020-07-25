@@ -16,6 +16,7 @@ from acris.core.models import Track, Album, Genre, Artist
 
 
 def shared_vorbis_extract(track: Track, metadata: mutagen.FileType):
+    # print(datetime.timedelta(seconds=metadata.info.length))
     track.length = datetime.timedelta(seconds=metadata.info.length)
     track.name = metadata.get('title')
     if metadata.get('artist') is not None:

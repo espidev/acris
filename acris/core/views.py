@@ -1,7 +1,11 @@
+import os
+import sys
 from datetime import datetime
 
+from django.core.files.base import ContentFile
+from django.http.response import HttpResponse
 from rest_framework import permissions, generics, mixins, status
-from rest_framework.parsers import FileUploadParser
+from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -52,8 +56,9 @@ class CollectionsListRoute(APIView):
     def post(self, request, format=None):
         serializer = serializers.CollectionSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(date_created=datetime.now())
+            serializer.save(date_created=make_aware(datetime.now()))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -66,7 +71,7 @@ class CollectionRoute(APIView):
         serializer = serializers.CollectionSerializer(collection)
         return Response(serializer.data)
 
-    def put(self, request, collection_id, format=None):
+    def post(self, request, collection_id, format=None):
         collection = get_collection(collection_id)
         serializer = serializers.CollectionSerializer(collection, data=request.data)
         if serializer.is_valid():
@@ -82,7 +87,7 @@ class CollectionRoute(APIView):
 
 # route: api/collection/<collection_id>/upload
 class CollectionUploadRoute(APIView):
-    parser_classes = (FileUploadParser,)
+    parser_classes = (MultiPartParser, )
 
     def put(self, request, collection_id, format=None):
         try:
@@ -106,7 +111,7 @@ class CollectionTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return Response(get_collection(kwargs['collection_id']).track_set.all())
+        return Response(serializers.TrackSerializer(get_collection(kwargs['collection_id']).track_set.all(), many=True).data)
 
 
 # route: api/track/<track_id>
@@ -121,7 +126,7 @@ class TrackRoute(APIView):
             raise Http404
 
     def delete(self, request, format=None, *args, **kwargs):
-        Track.objects.get(id=kwargs['track_id']).delete(save=True)
+        Track.objects.get(id=kwargs['track_id']).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -247,4 +252,19 @@ class GenreTracksRoute(generics.ListAPIView):
 
 # route: api/track/<track_id>/stream
 class TrackStreamRoute(APIView):
-    pass
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            track = Track.objects.get(id=kwargs['track_id'])
+            fsock = track.audio_src.open('rb')
+            response = HttpResponse(fsock)
+            response['Content-Type'] = 'audio/mp3'
+            response['Content-Disposition'] = 'attachment; filename=%s' % (track.file_name.replace(' ', '-'), )
+            response['Content-Length'] = os.path.getsize(track.audio_src.path)
+            return response
+        except Track.DoesNotExist:
+            raise Http404
+        except Exception as e:
+            print(e)
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -30,7 +30,7 @@ urlpatterns = [
     path('api/collection/<int:collection_id>/genres/', views.CollectionGenresRoute.as_view(), name='collection-genres'),
     path('api/genre/<str:genre_id>/', views.GenreRoute.as_view(), name='genre-info'),
     path('api/genre/<str:genre_id>/tracks/', views.GenreTracksRoute.as_view(), name='genre-tracks'),
-    path('api/track/<int:track_id>/stream/', views.TrackRoute.as_view(), name='track-stream'),
+    path('api/track/<int:track_id>/stream/', views.TrackStreamRoute.as_view(), name='track-stream'),
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

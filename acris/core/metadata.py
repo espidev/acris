@@ -1,4 +1,6 @@
 import base64
+import os
+import sys
 
 import mutagen
 
@@ -17,18 +19,41 @@ from acris.core.models import Track, Album, Genre, Artist
 
 def shared_vorbis_extract(track: Track, metadata: mutagen.FileType):
     # print(datetime.timedelta(seconds=metadata.info.length))
-    track.length = datetime.timedelta(seconds=metadata.info.length)
-    track.name = metadata.get('title')
-    if metadata.get('artist') is not None:
-        track.artists.add(Artist.objects.get_or_create(collection=track.collection, name=metadata.get('artist')))
-    track.album_artist = metadata.get('albumartist')
-    if metadata.get('album') is not None:
-        track.album = Album.objects.get_or_create(collection=track.collection, name=metadata.get('album'))
-    track.album_track_number = metadata.get('tracknumber')
-    if metadata.get('genre') is not None:
-        track.genres.add(Genre.objects.get_or_create(collection=track.collection, name=metadata.get('genre')))
-    track.lyrics = metadata.get('lyrics')
-    track.year = metadata.get('date')
+    print(metadata)  # TODO
+    try:
+        track.length = datetime.timedelta(seconds=metadata.info.length)
+
+        if metadata.get('title') is not None:
+            track.name = metadata.get('title')[0]
+
+        if metadata.get('artist') is not None:
+            artist, created = Artist.objects.get_or_create(collection=track.collection, name=metadata.get('artist')[0])
+            track.artists.add(artist)
+
+        if metadata.get('albumartist') is not None:
+            track.album_artist = metadata.get('albumartist')[0]
+
+        if metadata.get('album') is not None:
+            track.album, created = Album.objects.get_or_create(collection=track.collection, name=metadata.get('album')[0])
+
+        if metadata.get('tracknumber') is not None:
+            track.album_track_number = metadata.get('tracknumber')[0]
+
+        if metadata.get('genre') is not None:
+            genre, created = Genre.objects.get_or_create(collection=track.collection, name=metadata.get('genre')[0])
+            track.genres.add(genre)
+
+        if metadata.get('lyrics') is not None:
+            track.lyrics = metadata.get('lyrics')[0]
+
+        if metadata.get('date') is not None:
+            track.year = metadata.get('date')[0]
+
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        print(e)
 
 
 def apply_thumbnail(track: Track, image: Image):
@@ -38,6 +63,7 @@ def apply_thumbnail(track: Track, image: Image):
 
 # extract audio file metadata and apply it onto track model
 def extract_metadata(track: Track, metadata: mutagen.FileType):
+
     try:
         if isinstance(metadata, FLAC):
             track.audio_format = 'flac'
@@ -47,11 +73,11 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
 
         elif isinstance(metadata, MP3):
             # image only accessible with full ID3
-            if metadata.tags.getall("APIC") is not None and len(metadata.tags.getall("APIC")) > 0:
-                apply_thumbnail(track, Image.open(BytesIO(metadata.tags.getall("APIC")[0])))
+            if metadata.get("APIC") is not None and len(metadata.get("APIC")) > 0:
+                apply_thumbnail(track, Image.open(BytesIO(metadata.get("APIC")[0])))
 
             # use EasyID3 for everything else
-            metadata = EasyMP3(track.audio_src)
+            metadata = EasyMP3(track.audio_src.path)
             track.audio_format = 'mp3'
             shared_vorbis_extract(track, metadata)
 
@@ -107,3 +133,8 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
 
     except mutagen.MutagenError:
         print("Fail :(")
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        print(e)

@@ -10,6 +10,17 @@ class AcrisUserSerializer(serializers.ModelSerializer):
 
 
 class CollectionSerializer(serializers.ModelSerializer):
+    owners = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=AcrisUser.objects.all(),
+    )
+    viewers = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=AcrisUser.objects.all(),
+    )
+
     class Meta:
         model = Collection
         fields = ['id', 'name', 'is_public', 'owners', 'viewers']

@@ -1,5 +1,21 @@
+import os
+from datetime import timedelta
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.dispatch import receiver
+
+
+def delete_file_on_change_helper(old_file, new_file):
+    if not old_file == new_file:
+        if os.path.isfile(old_file.path):
+            os.remove(old_file.path)
+
+
+def delete_file_on_delete_helper(fileField):
+    if fileField:
+        if os.path.isfile(fileField.path):
+            os.remove(fileField.path)
 
 
 class AcrisUser(AbstractUser):
@@ -57,10 +73,10 @@ class Artist(models.Model):
 # an individual album, belonging to one collection
 class Album(models.Model):
     name = models.CharField(max_length=128)
-    length = models.DurationField()
-    artists = models.ManyToManyField(Artist)
+    length = models.DurationField(default=timedelta(seconds=0))
+    artists = models.ManyToManyField(Artist, default=[])
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    thumbnail_src = models.ImageField(upload_to=album_thumbnail_path)
+    thumbnail_src = models.ImageField(upload_to=album_thumbnail_path, null=True)
 
 
 # an individual genre, belonging to one collection
@@ -88,3 +104,90 @@ class Track(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     thumbnail_src = models.ImageField(upload_to=track_thumbnail_path)
     audio_src = models.FileField("file location", upload_to=track_path)
+
+
+@receiver(models.signals.post_delete, sender=Album)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    delete_file_on_delete_helper(instance.thumbnail_src)
+
+
+@receiver(models.signals.pre_save, sender=Album)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_obj = Track.objects.get(pk=instance.pk)
+        delete_file_on_change_helper(old_obj.thumbnail_src, instance.thumbnail_src)
+    except Album.DoesNotExist:
+        return False
+
+
+@receiver(models.signals.post_delete, sender=Artist)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    delete_file_on_delete_helper(instance.thumbnail_src)
+
+
+@receiver(models.signals.pre_save, sender=Artist)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_obj = Track.objects.get(pk=instance.pk)
+        delete_file_on_change_helper(old_obj.thumbnail_src, instance.thumbnail_src)
+    except Artist.DoesNotExist:
+        return False
+
+
+@receiver(models.signals.post_delete, sender=Album)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    delete_file_on_delete_helper(instance.thumbnail_src)
+
+
+@receiver(models.signals.pre_save, sender=Album)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_obj = Track.objects.get(pk=instance.pk)
+        delete_file_on_change_helper(old_obj.thumbnail_src, instance.thumbnail_src)
+    except Album.DoesNotExist:
+        return False
+
+
+@receiver(models.signals.post_delete, sender=Genre)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    delete_file_on_delete_helper(instance.thumbnail_src)
+
+
+@receiver(models.signals.pre_save, sender=Genre)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_obj = Track.objects.get(pk=instance.pk)
+        delete_file_on_change_helper(old_obj.thumbnail_src, instance.thumbnail_src)
+    except Genre.DoesNotExist:
+        return False
+
+
+@receiver(models.signals.post_delete, sender=Track)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    delete_file_on_delete_helper(instance.audio_src)
+    delete_file_on_delete_helper(instance.thumbnail_src)
+
+
+@receiver(models.signals.pre_save, sender=Track)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_obj = Track.objects.get(pk=instance.pk)
+        delete_file_on_change_helper(old_obj.audio_src, instance.audio_src)
+        delete_file_on_change_helper(old_obj.thumbnail_src, instance.thumbnail_src)
+    except Track.DoesNotExist:
+        return False

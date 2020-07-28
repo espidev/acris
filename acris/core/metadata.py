@@ -79,7 +79,7 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
 
     try:
         if isinstance(metadata, FLAC):
-            track.audio_format = 'flac'
+            track.audio_format = 'audio/flac'
             shared_vorbis_extract(track, metadata)
             if len(metadata.pictures) > 0:
                 apply_thumbnail(track, BytesIO(metadata.pictures[0].data))
@@ -92,29 +92,44 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
 
             # use EasyID3 for everything else
             metadata = EasyMP3(track.audio_src.path)
-            track.audio_format = 'mp3'
+            track.audio_format = 'audio/mpeg'
             shared_vorbis_extract(track, metadata)
 
         elif isinstance(metadata, MP4):
-            track.name = metadata.get('\xa9nam')
+            if metadata.get('\xa9nam') is not None:
+                track.name = metadata.get('\xa9nam')[0]
+
             track.length = datetime.timedelta(seconds=metadata.info.length)
-            track.audio_format = 'mp4'
+            track.audio_format = 'audio/mp4'
+
             if metadata.get('\xa9ART') is not None:
-                track.artists.add(Artist.objects.get_or_create(collection=track.collection, name=metadata.get('\xa9ART')))
-            track.album_artist = metadata.get('aART')
+                artist, created = Artist.objects.get_or_create(collection=track.collection, name=metadata.get('\xa9ART')[0])
+                track.artists.add(artist)
+
+            if metadata.get('aART') is not None:
+                track.album_artist = metadata.get('aART')[0]
+
             if metadata.get('\xa9alb') is not None:
-                track.album = Album.objects.get_or_create(collection=track.collection, name=metadata.get('\xa9alb'))
-            track.album_track_number = metadata['soal']
+                track.album = Album.objects.get_or_create(collection=track.collection, name=metadata.get('\xa9alb')[0])
+
+            if metadata.get('soal') is not None:
+                track.album_track_number = metadata['soal'][0]
+
             if metadata.get('\xa9gen') is not None:
-                track.genres.add(Genre.objects.get_or_create(collection=track.collection, name=metadata.get('\xa9gen')))
-            track.lyrics = metadata.get('\xa9lyr')
-            track.year = metadata.get('\xa9day')
+                genre, created = Genre.objects.get_or_create(collection=track.collection, name=metadata.get('\xa9gen')[0])
+                track.genres.add(genre)
+
+            if metadata.get('\xa9lyr') is not None:
+                track.lyrics = metadata.get('\xa9lyr')[0]
+
+            if metadata.get('\xa9day') is not None:
+                track.year = metadata.get('\xa9day')[0]
 
             if metadata.get('covr') is not None and len(metadata.get('covr')) > 0:
                 apply_thumbnail(track, Image.open(BytesIO(metadata.get('covr')[0])))
 
         elif isinstance(metadata, OggVorbis):
-            track.audio_format = 'ogg vorbis'
+            track.audio_format = 'audio/ogg'
             shared_vorbis_extract(track, metadata)
 
             for b64_data in metadata.get("metadata_block_picture", []):
@@ -130,7 +145,7 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
                 break
 
         elif isinstance(metadata, OggOpus):
-            track.audio_format = 'ogg opus'
+            track.audio_format = 'audio/opus'
             shared_vorbis_extract(track, metadata)
 
             for b64_data in metadata.get("metadata_block_picture", []):

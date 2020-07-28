@@ -259,7 +259,7 @@ class TrackStreamRoute(APIView):
             track = Track.objects.get(id=kwargs['track_id'])
             fsock = track.audio_src.open('rb')
             response = HttpResponse(fsock)
-            response['Content-Type'] = 'audio/mp3'
+            response['Content-Type'] = track.audio_format
             response['Content-Disposition'] = 'attachment; filename=%s' % (track.file_name.replace(' ', '-'),)
             response['Content-Length'] = os.path.getsize(track.audio_src.path)
             return response

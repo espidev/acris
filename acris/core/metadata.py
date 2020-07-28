@@ -1,8 +1,10 @@
 import base64
+import io
 import os
 import sys
 
 import mutagen
+from django.core.files.base import ContentFile
 
 from mutagen.flac import FLAC, Picture, error as FLACError
 from mutagen.mp3 import EasyMP3, MP3
@@ -12,7 +14,6 @@ from mutagen.mp4 import MP4
 
 from io import BytesIO
 from PIL import Image
-from django.core.files.uploadedfile import InMemoryUploadedFile
 import datetime
 from acris.core.models import Track, Album, Genre, Artist
 
@@ -56,9 +57,21 @@ def shared_vorbis_extract(track: Track, metadata: mutagen.FileType):
         print(e)
 
 
-def apply_thumbnail(track: Track, image: Image):
-    image_name = str(track.id) + '.' + image.format.lower()
-    track.save(image_name, InMemoryUploadedFile(image, None, image_name, Image.MIME[image.format], image.tell, None))
+def apply_thumbnail(track: Track, image_data):
+    try:
+        image = Image.open(image_data)
+
+        output = io.BytesIO()
+        image.save(output, format='JPEG')
+
+        image_name = str(track.id) + '.png'
+        track.thumbnail_src.save(image_name, ContentFile(output.getvalue()), save=True)
+
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        print(e)
 
 
 # extract audio file metadata and apply it onto track model
@@ -69,12 +82,13 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
             track.audio_format = 'flac'
             shared_vorbis_extract(track, metadata)
             if len(metadata.pictures) > 0:
-                apply_thumbnail(track, Image.open(BytesIO(metadata.pictures[0].data)))
+                apply_thumbnail(track, BytesIO(metadata.pictures[0].data))
 
         elif isinstance(metadata, MP3):
             # image only accessible with full ID3
-            if metadata.get("APIC") is not None and len(metadata.get("APIC")) > 0:
-                apply_thumbnail(track, Image.open(BytesIO(metadata.get("APIC")[0])))
+            apic_tag_array = metadata.tags.getall('APIC')
+            if apic_tag_array is not None and len(apic_tag_array) > 0:
+                apply_thumbnail(track, BytesIO(apic_tag_array[0].data))
 
             # use EasyID3 for everything else
             metadata = EasyMP3(track.audio_src.path)
@@ -110,7 +124,7 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
                     continue
                 try:
                     picture = Picture(data)
-                    apply_thumbnail(track, Image.open(BytesIO(picture.data)))
+                    apply_thumbnail(track, BytesIO(picture.data))
                 except FLACError:
                     continue
                 break
@@ -126,7 +140,7 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
                     continue
                 try:
                     picture = Picture(data)
-                    apply_thumbnail(track, Image.open(BytesIO(picture.data)))
+                    apply_thumbnail(track, BytesIO(picture.data))
                 except FLACError:
                     continue
                 break

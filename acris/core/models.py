@@ -102,7 +102,7 @@ class Track(models.Model):
     year = models.CharField(max_length=128, null=True)
     playlists = models.ManyToManyField(Playlist)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    thumbnail_src = models.ImageField(upload_to=track_thumbnail_path)
+    thumbnail_src = models.ImageField("thumbnail location", upload_to=track_thumbnail_path, default="album.png")
     audio_src = models.FileField("file location", upload_to=track_path)
 
 

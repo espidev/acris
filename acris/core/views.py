@@ -1,23 +1,20 @@
 import os
-import sys
 from datetime import datetime
 
-from django.core.files.base import ContentFile
-from django.http.response import HttpResponse
-from rest_framework import permissions, generics, mixins, status
-from rest_framework.parsers import FileUploadParser, MultiPartParser
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import Http404
-from django.contrib.auth.models import User
+from django.http.response import HttpResponse
 from django.utils.timezone import make_aware
+from rest_framework import permissions, generics, status
+from rest_framework.parsers import MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-import acris.core.serializers as serializers
 import acris.core.audio as audio
+import acris.core.serializers as serializers
 from acris.core.models import Collection, Artist, Track, Album, Genre, Playlist
-from acris.core.permissions import HasCollectionPermissionOrReadOnly, HasSubCollectionPermissionOrReadOnly
+from acris.core.permissions import HasCollectionPermissionOrReadOnly
 
 
 def get_collection(collection_id):
@@ -87,14 +84,15 @@ class CollectionRoute(APIView):
 
 # route: api/collection/<collection_id>/upload
 class CollectionUploadRoute(APIView):
-    parser_classes = (MultiPartParser, )
+    parser_classes = (MultiPartParser,)
 
     def put(self, request, collection_id, format=None):
         try:
             collection = get_collection(collection_id)
             file = request.FILES['file']
 
-            track = Track(date_uploaded=make_aware(datetime.now()), collection=collection, file_name=file.name, audio_src=file)
+            track = Track(date_uploaded=make_aware(datetime.now()), collection=collection, file_name=file.name,
+                          audio_src=file)
             track.save()
 
             # add metadata to db
@@ -111,7 +109,9 @@ class CollectionTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return Response(serializers.TrackSerializer(get_collection(kwargs['collection_id']).track_set.all(), many=True).data)
+        return Response(
+            serializers.TrackSerializer(Track.objects.filter(collection=kwargs['collection_id']).order_by('-name'),
+                                        many=True).data)
 
 
 # route: api/track/<track_id>
@@ -260,7 +260,7 @@ class TrackStreamRoute(APIView):
             fsock = track.audio_src.open('rb')
             response = HttpResponse(fsock)
             response['Content-Type'] = 'audio/mp3'
-            response['Content-Disposition'] = 'attachment; filename=%s' % (track.file_name.replace(' ', '-'), )
+            response['Content-Disposition'] = 'attachment; filename=%s' % (track.file_name.replace(' ', '-'),)
             response['Content-Length'] = os.path.getsize(track.audio_src.path)
             return response
         except Track.DoesNotExist:

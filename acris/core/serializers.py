@@ -51,6 +51,10 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TrackSerializer(serializers.ModelSerializer):
+    album = AlbumSerializer()
+    artists = ArtistSerializer(many=True)
+    genres = GenreSerializer(many=True)
+
     class Meta:
         model = Track
         fields = ['id',

@@ -275,6 +275,7 @@ class TrackStreamRoute(APIView):
             response['Content-Type'] = track.audio_format
             response['Content-Disposition'] = 'attachment; filename=%s' % (track.file_name.replace(' ', '-'),)
             response['Content-Length'] = os.path.getsize(track.audio_src.path)
+            response['Accept-Ranges'] = 'bytes'
             return response
         except Track.DoesNotExist:
             raise Http404

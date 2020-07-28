@@ -191,7 +191,6 @@ class AlbumRoute(generics.RetrieveAPIView):
 
 # route: api/album/<album_id>/tracks
 class AlbumTracksRoute(generics.ListAPIView):
-    serializer_class = serializers.TrackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -212,7 +211,6 @@ class CollectionArtistsRoute(generics.ListAPIView):
 
 # route: api/artist/<artist_id>
 class ArtistRoute(generics.RetrieveAPIView):
-    serializer_class = serializers.ArtistSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -225,7 +223,6 @@ class ArtistRoute(generics.RetrieveAPIView):
 
 # route: api/artist/<artist_id>/tracks
 class ArtistTracksRoute(generics.ListAPIView):
-    serializer_class = serializers.TrackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -236,18 +233,16 @@ class ArtistTracksRoute(generics.ListAPIView):
 
 # route: api/collection/<collection_id>/genres
 class CollectionGenresRoute(generics.ListAPIView):
-    serializer_class = serializers.GenreSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         serializer = serializers.GenreSerializer(
-            Track.objects.filter(collection=kwargs['collection_id']).order_by('name'), many=True)
+            Genre.objects.filter(collection=kwargs['collection_id']).order_by('name'), many=True)
         return Response(serializer.data)
 
 
 # route: api/genre/<genre_id>
 class GenreRoute(generics.RetrieveAPIView):
-    serializer_class = serializers.GenreSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -260,13 +255,12 @@ class GenreRoute(generics.RetrieveAPIView):
 
 # route: api/genre/<genre_id>/tracks
 class GenreTracksRoute(generics.ListAPIView):
-    serializer_class = serializers.TrackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         serializer = serializers.TrackSerializer(
             Track.objects.filter(genres__id=kwargs['genre_id']).order_by('name'), many=True)
-        return Response(serializer)
+        return Response(serializer.data)
 
 
 # route: api/track/<track_id>/stream

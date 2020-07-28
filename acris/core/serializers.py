@@ -9,6 +9,14 @@ class AcrisUserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
 
 
+class CollectionViewSerializer(serializers.ModelSerializer):
+    owners = AcrisUserSerializer(many=True)
+    viewers = AcrisUserSerializer(many=True)
+
+    class Meta:
+        model = Collection
+        fields = ['id', 'name', 'is_public', 'owners', 'viewers']
+
 class CollectionSerializer(serializers.ModelSerializer):
     owners = serializers.SlugRelatedField(
         many=True,

@@ -160,8 +160,9 @@ class PlaylistTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        serializer = serializers.PlaylistSerializer(Track.objects.filter(playlists__id=kwargs['playlist_id']),
-                                                    many=True)
+        serializer = serializers.PlaylistSerializer(
+            Track.objects.filter(playlists__id=kwargs['playlist_id']).order_by('name'),
+            many=True)
         return Response(serializer.data)
 
 
@@ -170,8 +171,9 @@ class CollectionAlbumsRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        serializer = serializers.AlbumSerializer(
-            Album.objects.filter(collection=kwargs['collection_id']).order_by('name'), many=True)
+
+        albums = Album.objects.filter(collection=kwargs['collection_id']).order_by('name')
+        serializer = serializers.AlbumSerializer(albums, many=True)
         return Response(serializer.data)
 
 
@@ -194,7 +196,7 @@ class AlbumTracksRoute(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         serializer = serializers.TrackSerializer(
-            Track.objects.filter(playlists__id=kwargs['album_id']).order_by('name'), many=True)
+            Track.objects.filter(album__id=kwargs['album_id']).order_by('name'), many=True)
         return Response(serializer.data)
 
 
@@ -228,7 +230,7 @@ class ArtistTracksRoute(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         serializer = serializers.TrackSerializer(
-            Track.objects.filter(playlists__id=kwargs['artist_id']).order_by('name', many=True))
+            Track.objects.filter(artists__id=kwargs['artist_id']).order_by('name'), many=True)
         return Response(serializer.data)
 
 
@@ -263,7 +265,7 @@ class GenreTracksRoute(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         serializer = serializers.TrackSerializer(
-            Track.objects.filter(playlists__id=kwargs['genre_id']).order_by('name'), many=True)
+            Track.objects.filter(genres__id=kwargs['genre_id']).order_by('name'), many=True)
         return Response(serializer)
 
 

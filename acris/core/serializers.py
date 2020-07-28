@@ -43,19 +43,19 @@ class PlaylistSerializer(serializers.ModelSerializer):
 class ArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
-        fields = ['name', 'collection', 'thumbnail_src']
+        fields = ['id', 'name', 'collection', 'thumbnail_src']
 
 
 class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Album
-        fields = ['name', 'length', 'artists', 'collection', 'thumbnail_src']
+        fields = ['id', 'name', 'length', 'artists', 'collection', 'thumbnail_src']
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = ['name', 'collection', 'thumbnail_src']
+        fields = ['id', 'name', 'collection', 'thumbnail_src']
 
 
 class TrackSerializer(serializers.ModelSerializer):

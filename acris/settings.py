@@ -15,6 +15,7 @@ SECRET_KEY = 'defaultsecret'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
+ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -28,13 +29,13 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
     'content-disposition',
 ]
-ALLOWED_HOSTS = []
 
 
 # Application definition
 INSTALLED_APPS = [
     'acris.core',
     'corsheaders',
+    'django_fields',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,7 +60,9 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    # 'PAGE_SIZE': 100
 }
 
 ROOT_URLCONF = 'acris.urls'
@@ -134,3 +137,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/api/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]

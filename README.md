@@ -4,3 +4,5 @@
 * audio-metadata
 * Django + REST
 * pillow
+* django-default-imagefield
+* django-filter

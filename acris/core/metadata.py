@@ -15,7 +15,8 @@ from mutagen.mp4 import MP4
 from io import BytesIO
 from PIL import Image
 import datetime
-from acris.core.models import Track, Album, Genre, Artist
+
+from acris.core.models import Track, Artist, Album, Genre
 
 
 def shared_vorbis_extract(track: Track, metadata: mutagen.FileType):
@@ -159,6 +160,10 @@ def extract_metadata(track: Track, metadata: mutagen.FileType):
                 except FLACError:
                     continue
                 break
+
+        # if name is empty, put filename instead
+        if track.name == '':
+            track.name = track.file_name
 
     except mutagen.MutagenError:
         print("Fail :(")

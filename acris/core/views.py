@@ -6,14 +6,14 @@ from django.db.models import Q
 from django.http import Http404
 from django.http.response import HttpResponse
 from django.utils.timezone import make_aware
-from rest_framework import permissions, generics, status
+from rest_framework import permissions, generics, status, filters
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 import acris.core.audio as audio
 import acris.core.serializers as serializers
-from acris.core.models import Collection, Artist, Track, Album, Genre, Playlist
+from acris.core.models import AcrisUser, Collection, Artist, Playlist, Album, Genre, Track
 from acris.core.permissions import HasCollectionPermissionOrReadOnly
 
 
@@ -106,11 +106,14 @@ class CollectionUploadRoute(APIView):
 # route: api/collection/<collection_id>/tracks
 class CollectionTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.TrackSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'file_name']
+    ordering_fields = ['name', 'year']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        return Response(
-            serializers.TrackSerializer(Track.objects.filter(collection=kwargs['collection_id']).order_by('name'),
-                                        many=True).data)
+    def get_queryset(self):
+        return Track.objects.filter(collection=self.kwargs['collection_id'])
 
 
 # route: api/track/<track_id>
@@ -132,13 +135,15 @@ class TrackRoute(APIView):
 
 # route: api/collection/<collection_id>/playlists
 class CollectionPlaylistsRoute(generics.ListAPIView):
-    serializer_class = serializers.PlaylistSerializer
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.PlaylistSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.PlaylistSerializer(
-            Playlist.objects.filter(collection=kwargs['collection_id']).order_by('name'), many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Playlist.objects.filter(collection=self.kwargs['collection_id'])
 
 
 # route: api/playlist/<playlist_id>
@@ -156,25 +161,28 @@ class PlaylistRoute(generics.RetrieveAPIView):
 
 # route: api/playlist/<playlist_id>/tracks
 class PlaylistTracksRoute(generics.ListAPIView):
-    serializer_class = serializers.TrackSerializer
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.TrackSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'file_name']
+    ordering_fields = ['name', 'year']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.PlaylistSerializer(
-            Track.objects.filter(playlists__id=kwargs['playlist_id']).order_by('name'),
-            many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Track.objects.filter(playlists__id=self.kwargs['playlist_id'])
 
 
 # route: api/collection/<collection_id>/albums
 class CollectionAlbumsRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.AlbumSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-
-        albums = Album.objects.filter(collection=kwargs['collection_id']).order_by('name')
-        serializer = serializers.AlbumSerializer(albums, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Album.objects.filter(collection=self.kwargs['collection_id'])
 
 
 # route: api/album/<album_id>
@@ -192,21 +200,27 @@ class AlbumRoute(generics.RetrieveAPIView):
 # route: api/album/<album_id>/tracks
 class AlbumTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.TrackSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'file_name']
+    ordering_fields = ['name', 'year']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.TrackSerializer(
-            Track.objects.filter(album__id=kwargs['album_id']).order_by('name'), many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Track.objects.filter(album__id=self.kwargs['album_id'])
 
 
 # route: api/collection/<collection_id>/artists
 class CollectionArtistsRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.ArtistSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.ArtistSerializer(
-            Artist.objects.filter(collection=kwargs['collection_id']).order_by('name'), many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Artist.objects.filter(collection=self.kwargs['collection_id'])
 
 
 # route: api/artist/<artist_id>
@@ -224,21 +238,27 @@ class ArtistRoute(generics.RetrieveAPIView):
 # route: api/artist/<artist_id>/tracks
 class ArtistTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.TrackSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'file_name']
+    ordering_fields = ['name', 'year']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.TrackSerializer(
-            Track.objects.filter(artists__id=kwargs['artist_id']).order_by('name'), many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Track.objects.filter(artists__id=self.kwargs['artist_id'])
 
 
 # route: api/collection/<collection_id>/genres
 class CollectionGenresRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.GenreSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.GenreSerializer(
-            Genre.objects.filter(collection=kwargs['collection_id']).order_by('name'), many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Genre.objects.filter(collection=self.kwargs['collection_id'])
 
 
 # route: api/genre/<genre_id>
@@ -256,11 +276,14 @@ class GenreRoute(generics.RetrieveAPIView):
 # route: api/genre/<genre_id>/tracks
 class GenreTracksRoute(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.TrackSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'file_name']
+    ordering_fields = ['name', 'year']
+    ordering = ['name']
 
-    def get(self, request, *args, **kwargs):
-        serializer = serializers.TrackSerializer(
-            Track.objects.filter(genres__id=kwargs['genre_id']).order_by('name'), many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Track.objects.filter(genres__id=self.kwargs['genre_id'])
 
 
 # route: api/track/<track_id>/stream

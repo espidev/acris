@@ -1,5 +1,6 @@
-from acris.core.models import Collection, Playlist, Track, Artist, Album, Genre, AcrisUser
 from rest_framework import serializers
+
+from acris.core.models import AcrisUser, Collection, Artist, Playlist, Album, Genre, Track
 
 
 class AcrisUserSerializer(serializers.ModelSerializer):
@@ -16,6 +17,7 @@ class CollectionViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         fields = ['id', 'name', 'is_public', 'owners', 'viewers']
+
 
 class CollectionSerializer(serializers.ModelSerializer):
     owners = serializers.SlugRelatedField(

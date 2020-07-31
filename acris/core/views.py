@@ -7,6 +7,7 @@ from django.http import Http404
 from django.http.response import HttpResponse
 from django.utils.timezone import make_aware
 from rest_framework import permissions, generics, status, filters
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -111,6 +112,7 @@ class CollectionTracksRoute(generics.ListAPIView):
     search_fields = ['name', 'file_name']
     ordering_fields = ['name', 'year']
     ordering = ['name']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         return Track.objects.filter(collection=self.kwargs['collection_id'])
@@ -167,6 +169,7 @@ class PlaylistTracksRoute(generics.ListAPIView):
     search_fields = ['name', 'file_name']
     ordering_fields = ['name', 'year']
     ordering = ['name']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         return Track.objects.filter(playlists__id=self.kwargs['playlist_id'])
@@ -205,6 +208,7 @@ class AlbumTracksRoute(generics.ListAPIView):
     search_fields = ['name', 'file_name']
     ordering_fields = ['name', 'year']
     ordering = ['name']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         return Track.objects.filter(album__id=self.kwargs['album_id'])
@@ -243,6 +247,7 @@ class ArtistTracksRoute(generics.ListAPIView):
     search_fields = ['name', 'file_name']
     ordering_fields = ['name', 'year']
     ordering = ['name']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         return Track.objects.filter(artists__id=self.kwargs['artist_id'])
@@ -281,6 +286,7 @@ class GenreTracksRoute(generics.ListAPIView):
     search_fields = ['name', 'file_name']
     ordering_fields = ['name', 'year']
     ordering = ['name']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         return Track.objects.filter(genres__id=self.kwargs['genre_id'])

@@ -3,7 +3,7 @@
 
 A simple Django based service that exposes a basic REST API that allows users to manage and stream from multiple music collections.
 
-The reference UI implementation is [acris-web](https://github.com/espidev/acris-web).
+The reference (React based) UI implementation is [acris-web](https://github.com/espidev/acris-web).
 
 ### Endpoints
 

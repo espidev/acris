@@ -35,7 +35,6 @@ CORS_ALLOW_HEADERS = [
 INSTALLED_APPS = [
     'acris.core',
     'corsheaders',
-    'django_fields',
 
     'django.contrib.admin',
     'django.contrib.auth',

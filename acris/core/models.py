@@ -3,7 +3,6 @@ from datetime import timedelta
 
 from django.db import models
 from django.dispatch import receiver
-from django_fields import DefaultStaticImageField
 
 from django.contrib.auth.models import AbstractUser
 
@@ -14,10 +13,10 @@ def delete_file_on_change_helper(old_file, new_file):
             os.remove(old_file.path)
 
 
-def delete_file_on_delete_helper(fileField):
-    if fileField:
-        if os.path.isfile(fileField.path):
-            os.remove(fileField.path)
+def delete_file_on_delete_helper(file_field):
+    if file_field:
+        if os.path.isfile(file_field.path):
+            os.remove(file_field.path)
 
 
 # ~~~ User ~~~
@@ -45,7 +44,7 @@ def artist_thumbnail_path(instance, filename):
 class Artist(models.Model):
     name = models.CharField(max_length=128)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    thumbnail_src = DefaultStaticImageField(upload_to=artist_thumbnail_path, default_image_path='empty-track.png')
+    thumbnail_src = models.ImageField(upload_to=artist_thumbnail_path)
 
 
 @receiver(models.signals.post_delete, sender=Artist)
@@ -76,7 +75,7 @@ class Album(models.Model):
     length = models.DurationField(default=timedelta(seconds=0))
     artists = models.ManyToManyField(Artist, default=[])
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    thumbnail_src = DefaultStaticImageField(upload_to=album_thumbnail_path, default_image_path='empty-track.png')
+    thumbnail_src = models.ImageField(upload_to=album_thumbnail_path)
 
 
 @receiver(models.signals.post_delete, sender=Album)
@@ -105,7 +104,7 @@ def genre_thumbnail_path(instance, filename):
 class Genre(models.Model):
     name = models.CharField(max_length=128)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    thumbnail_src = DefaultStaticImageField(upload_to=genre_thumbnail_path, default_image_path='empty-track.png')
+    thumbnail_src = models.ImageField(upload_to=genre_thumbnail_path)
 
 
 @receiver(models.signals.post_delete, sender=Genre)
@@ -135,7 +134,7 @@ class Playlist(models.Model):
     date_created = models.DateTimeField()
     name = models.CharField(max_length=128)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    thumbnail_src = DefaultStaticImageField(upload_to=playlist_thumbnail_path, default_image_path='empty-track.png')
+    thumbnail_src = models.ImageField(upload_to=playlist_thumbnail_path)
 
 
 # ~~~ Track ~~~
@@ -163,7 +162,7 @@ class Track(models.Model):
     year = models.CharField(max_length=128, null=True)
     playlists = models.ManyToManyField(Playlist)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    thumbnail_src = DefaultStaticImageField("thumbnail location", upload_to=track_thumbnail_path, default_image_path='empty-track.png')
+    thumbnail_src = models.ImageField("thumbnail location", upload_to=track_thumbnail_path)
     audio_src = models.FileField("file location", upload_to=track_path)
 
     # def save(self, *args, **kwargs):

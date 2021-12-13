@@ -47,7 +47,7 @@ libvirt-python==7.1.0
 lit==0.11.1.dev0
 louis==3.17.0
 lutris==0.5.8.3
-lxml==4.6.3
+lxml==4.6.5
 Mako==1.1.4
 mallard-ducktype==1.0.2
 Markdown==3.3.4

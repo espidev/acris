@@ -112,7 +112,7 @@ sqlparse==0.4.1
 tbm-utils==2.6.0
 team==1.0
 toml==0.10.2
-Twisted==21.2.0
+Twisted==22.1.0
 typing==3.7.4.3
 urllib3==1.26.4
 validate==5.1.0.dev0

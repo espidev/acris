@@ -48,7 +48,7 @@ lit==0.11.1.dev0
 louis==3.17.0
 lutris==0.5.8.3
 lxml==4.9.1
-Mako==1.1.4
+Mako==1.2.2
 mallard-ducktype==1.0.2
 Markdown==3.3.4
 MarkupSafe==1.1.1

@@ -108,7 +108,7 @@ simplejwt==2.0.1
 six==1.15.0
 solaar==1.0.6
 soupsieve==2.2.1
-sqlparse==0.4.2
+sqlparse==0.4.4
 tbm-utils==2.6.0
 team==1.0
 toml==0.10.2

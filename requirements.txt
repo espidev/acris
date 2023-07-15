@@ -21,7 +21,7 @@ colorama==0.4.4
 configobj==5.1.0.dev0
 constantly==15.1.0
 contextlib2==0.6.0.post1
-cryptography==39.0.1
+cryptography==41.0.2
 dblatex==0.3.12
 deluge==2.1.0
 distlib==0.3.1

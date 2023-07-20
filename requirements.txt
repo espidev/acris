@@ -79,7 +79,7 @@ pycparser==2.20
 pycrypto==2.6.1
 pycryptodome==3.10.1
 pyelftools==0.27
-Pygments==2.9.0
+Pygments==2.15.0
 PyGObject==3.40.1
 PyHamcrest==1.10.0
 PyJWT==2.4.0
